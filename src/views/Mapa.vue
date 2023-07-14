@@ -37,14 +37,14 @@ export default defineComponent({
    
     var accidentes = [];
 
-    Papa.parse("src/coordenadasAccidentes.csv", {
+    Papa.parse("/coordenadasAccidentes.csv", {
       download: true,
       header: true,
-      complete: function (results) {
+      complete:  (results)  => {
         accidentes = results.data;
        
         
-        for (let h = 0; h < accidentes.length-1; h++) {
+        for (let h = 1; h < accidentes.length; h++) {
           
          
           
@@ -67,9 +67,11 @@ export default defineComponent({
           circulos.push(circulo);
           markers.push(marker );
 
-          console.log(accidentes[h])
+          //console.log(accidentes[h])
           
-        }     
+        } 
+        // console.log(accidentes)
+        
       },
     });
 
