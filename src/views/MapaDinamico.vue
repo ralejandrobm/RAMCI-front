@@ -25,27 +25,27 @@
 
         <div class="d-flex flex-column">
           <v-select
-            v-model="select1"
-            :items="items"
-            :rules="[(v) => !!v || 'Item is required']"
+            v-model="sexo"
+            :items="itemsSexo"
+            :rules="[(v) => !!v || 'Campo requerido']"
             label="Sexo"
             required
             :disabled="!checkbox"
           ></v-select>
 
           <v-select
-            v-model="select2"
-            :items="items"
-            :rules="[(v) => !!v || 'Item is required']"
+            v-model="rangoEdad"
+            :items="itemsRangoEdad"
+            :rules="[(v) => !!v || 'Campo requerido']"
             label="Rango de edad"
             required
             :disabled="!checkbox"
           ></v-select>
 
           <v-select
-            v-model="select3"
-            :items="items"
-            :rules="[(v) => !!v || 'Item is required']"
+            v-model="tipoVehiculo"
+            :items="itemsVehiculo"
+            :rules="[(v) => !!v || 'Campo requerido']"
             label="Typo de vehículo"
             required
             :disabled="!checkbox"
@@ -55,7 +55,7 @@
             color="purple"
             class="mt-4"
             block
-            @click="Actualiza"
+            @click="realizarPrediccion"
             :disabled="!checkbox"
           >
             Actualiza riesgo
@@ -70,8 +70,8 @@
 import mapaGoogle from "../components/MapaGoogle.vue";
 import { defineComponent } from "vue";
 import { GoogleMap, Circle, Marker } from "vue3-google-map";
-//import { read } from 'xlsx';
-import * as XLSX from "xlsx"
+
+import * as XLSX from "xlsx";
 //import Papa from "papaparse";
 
 export default defineComponent({
@@ -79,89 +79,51 @@ export default defineComponent({
 
   data() {
     return {
-      select1: null,
-      select2: null,
-      select3: null,
-      items: ["Item 1", "Item 2", "Item 3", "Item 4"],
+      sexo: null,
+      rangoEdad: null,
+      tipoVehiculo: null,
+      itemsSexo: ["Hombre", "Mujer"],
+      itemsRangoEdad: [
+        "0 a 9",
+        "10 a 19",
+        "20 a 29",
+        "30 a 39",
+        "40 a 49",
+        "50 a 59",
+        "60 a 69",
+        " 70 o más",
+      ],
+      itemsVehiculo: [
+        "Bicicleta",
+        "Vehículo pesado",
+        "Vehículo de pasajeros",
+        "Tren",
+        "Vehículos privados",
+      ],
       checkbox: false,
       center: { lat: 20.670303919412067, lng: -103.34941565353975 },
       circulos: [],
       markers: [],
       verMapa: true,
+      modelo: null,
     };
   },
 
   mounted() {
     this.Actualiza();
+    this.cargarModelo();
   },
 
   methods: {
     async Actualiza() {
-      //const center = { lat: 20.670303919412067, lng: -103.34941565353975 };
       var circulos = [];
-      var markers = [];
-      var accidentes = [];
 
-      /*
-      Papa.parse("/coordenadasAccidentes.csv", {
-        download: true,
-        header: true,
-        complete:  (results) => {
-          accidentes = results.data;
-
-          for (let h = 1; h < accidentes.length; h++) {
-           
-            const circulo = {
-              center: {
-                lat: parseFloat(accidentes[h].Coordy),
-                lng: parseFloat(accidentes[h].Coordx),
-              },
-              radius: 200,
-              strokeColor: "#FF0000",
-              strokeOpacity: 0.8,
-              strokeWeight: 2,
-              fillColor: "#FF0000",
-              fillOpacity: 0.35,
-            };
-
-            const marker = {
-              position: {
-                lat: parseFloat(accidentes[h].Coordy),
-                lng: parseFloat(accidentes[h].Coordx),
-              },
-              label: accidentes[h].cantidad,
-              title: "Accidente ciclista",
-            };
-            circulos.push(circulo);
-            markers.push(marker);
-            //console.log(accidentes[h]);
-          }   
-          
-          this.circulos = circulos;
-          this.markers = markers;
-        },
-        
-      });
-
-      
-     
-      
-      //this.center = center;
-      
-      //return { center, circulos, markers };
-
-      */
-      //https://drive.google.com/file/d/1fGKSWHCswN-t0cloNhe2rwWnxo7lciIF/view?usp=sharing
-
-      //https://docs.google.com/spreadsheets/d/1wcq3IGTRx30qKLk3dY9_wwnKCfKg6OKV/edit?usp=sharing&ouid=114133893460612313255&rtpof=true&sd=true
-       // "https://www.googleapis.com/drive/v3/files/1KoS9HTfD-HH4hoLYuKZr1TlEU9VcuWRaI13lugV-pw8/export?mimeType=application/vnd.openxmlformats-officedocument.spreadsheetml.sheet&key=AIzaSyBgKFy9Wna7cgZbeUnWOfmKa-wnLyNakNA";
-        
       try {
-        const url = "https://www.googleapis.com/drive/v3/files/1KoS9HTfD-HH4hoLYuKZr1TlEU9VcuWRaI13lugV-pw8/export?mimeType=application/vnd.openxmlformats-officedocument.spreadsheetml.sheet&key=AIzaSyBgKFy9Wna7cgZbeUnWOfmKa-wnLyNakNA";
-        
+        const url =
+          "https://www.googleapis.com/drive/v3/files/1njeXoo1FNx0nBxxvnp4FiGawnPZpEtNUUzQDcgXJy9g/export?mimeType=application/vnd.openxmlformats-officedocument.spreadsheetml.sheet&key=AIzaSyBgKFy9Wna7cgZbeUnWOfmKa-wnLyNakNA";
+        //const url = "https://www.googleapis.com/drive/v3/files/1KoS9HTfD-HH4hoLYuKZr1TlEU9VcuWRaI13lugV-pw8/export?mimeType=application/vnd.openxmlformats-officedocument.spreadsheetml.sheet&key=AIzaSyBgKFy9Wna7cgZbeUnWOfmKa-wnLyNakNA";
+        // const url = "https://www.googleapis.com/drive/v3/files/1C6JmWHUHLgerVjPq_PNHBLW5PfJ2fHjhUmw-vfiN0AA/export?mimeType=application/vnd.openxmlformats-officedocument.spreadsheetml.sheet&key=AIzaSyBgKFy9Wna7cgZbeUnWOfmKa-wnLyNakNA";
 
-        
-     
         fetch(url)
           .then((response) => response.arrayBuffer())
           .then((buffer) => {
@@ -173,41 +135,43 @@ export default defineComponent({
             const worksheet = workbook.Sheets[sheetName];
 
             // Accede a los datos de la primera hoja
-            const accidentes = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+            const accidentes = XLSX.utils.sheet_to_json(worksheet, {
+              header: 1,
+            });
 
             console.log(accidentes);
             // Aquí puedes realizar operaciones con los datos de la primera hoja
-            for (let h = 1; h < accidentes.length; h++) {
-           
-            const circulo = {
-              center: {
-                lat: parseFloat(accidentes[h][2]),
-                lng: parseFloat(accidentes[h][1]),
-              },
-              radius: 200,
-              strokeColor: "#FF0000",
-              strokeOpacity: 0.8,
-              strokeWeight: 2,
-              fillColor: "#FF0000",
-              fillOpacity: 0.35,
-            };
+            for (let h = 0; h < accidentes.length; h++) {
+              var color = "#FF0000";
+              if (accidentes[h][3] == "Sin riesgo") {
+                color = "#43DA28";
+              } else if (accidentes[h][3] == "Poco riesgo") {
+                color = "#EEF11D";
+              } else if (accidentes[h][3] == "Riesgo moderado") {
+                color = "#FAAA26";
+              } else if (accidentes[h][3] == "Alto riesgo") {
+                color = "#FF0000";
+              }
 
-            const marker = {
-              position: {
-                lat: parseFloat(accidentes[h][2]),
-                lng: parseFloat(accidentes[h][1]),
-              },
-              label: accidentes[h].cantidad,
-              title: "Accidente ciclista",
-            };
-            circulos.push(circulo);
-            markers.push(marker);
-            //console.log(accidentes[h]);
-          }   
-          
-          this.circulos = circulos;
-          this.markers = markers;
+              const circulo = {
+                center: {
+                  lat: parseFloat(accidentes[h][1]),
+                  lng: parseFloat(accidentes[h][2]),
+                },
+                radius: 100,
+                strokeColor: color,
+                strokeOpacity: 0.8,
+                strokeWeight: 2,
+                fillColor: color,
+                fillOpacity: 0.35,
+              };
 
+              circulos.push(circulo);
+
+              //console.log(accidentes[h]);
+            }
+
+            this.circulos = circulos;
           })
           .catch((error) => {
             console.log("Error al leer el archivo de Excel:", error);
@@ -216,6 +180,10 @@ export default defineComponent({
         console.error(error);
       }
     },
+
+    async cargarModelo() {},
+
+    realizarPrediccion() {},
   },
 });
 </script>

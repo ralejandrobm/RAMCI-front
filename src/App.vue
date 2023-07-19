@@ -20,7 +20,7 @@
          
            <v-list-item prepend-icon="mdi-map" title="RAMCI En tiempo real" value="dinamico" @click="navigateTo('/dinamico')"></v-list-item>
 
-          <v-list-item prepend-icon="mdi-calculator" title="calcular riesgo" value="riesgo" @click="navigateTo('/riesgo')"></v-list-item>
+       <!--   <v-list-item prepend-icon="mdi-calculator" title="calcular riesgo" value="riesgo" @click="navigateTo('/riesgo')"></v-list-item> !-->
          
           <v-list-item prepend-icon="mdi-file-document" title="metodología" value="metodo" @click="navigateTo('/metodo')"></v-list-item>
         </v-list>
