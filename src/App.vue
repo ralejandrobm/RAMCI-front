@@ -28,7 +28,7 @@
       <v-app-bar :elevation="1" >
         <v-app-bar-title class="text-center">Riesgo de Accidente de Movilidad Ciclista</v-app-bar-title>
       </v-app-bar>
-      <v-main >
+      <v-main style="height: 100vh;">
         <router-view />
       </v-main>
     </v-layout>

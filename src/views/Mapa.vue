@@ -1,9 +1,9 @@
 <template>
   
-    <v-layout class="d-flex align-center justify-center px-4 py-4" >
+    <v-layout class="d-flex align-center justify-center px-4 py-4" style="height: 100%;">
        <GoogleMap
       api-key="AIzaSyBgKFy9Wna7cgZbeUnWOfmKa-wnLyNakNA"
-      style="width: 1000px; height: 500px"
+      style="width: 100%; height: 100%"
       :center="center"
       :zoom="12"
     >
