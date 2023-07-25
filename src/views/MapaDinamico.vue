@@ -187,7 +187,7 @@ export default defineComponent({
         const url =
           "https://www.googleapis.com/drive/v3/files/1KoS9HTfD-HH4hoLYuKZr1TlEU9VcuWRaI13lugV-pw8/export?mimeType=application/vnd.openxmlformats-officedocument.spreadsheetml.sheet&key=AIzaSyBgKFy9Wna7cgZbeUnWOfmKa-wnLyNakNA";
 
-        fetch(url)
+        await fetch(url)
           .then((response) => response.arrayBuffer())
           .then((buffer) => {
             // Convierte el buffer en un libro de Excel
@@ -201,6 +201,13 @@ export default defineComponent({
             this.trafficVariable = XLSX.utils.sheet_to_json(worksheet, {
               header: 1,
             });
+
+            const csv = Papa.unparse(this.trafficVariable);
+
+            const { data, meta } = Papa.parse(csv, { header: true });
+            //console.log("1 valores meta", meta, data);
+
+            this.trafficVariable = data;
           })
           .catch((error) => {
             console.log("Error al leer el archivo de Excel:", error);
@@ -213,7 +220,7 @@ export default defineComponent({
         const url =
           "https://www.googleapis.com/drive/v3/files/1C6JmWHUHLgerVjPq_PNHBLW5PfJ2fHjhUmw-vfiN0AA/export?mimeType=application/vnd.openxmlformats-officedocument.spreadsheetml.sheet&key=AIzaSyBgKFy9Wna7cgZbeUnWOfmKa-wnLyNakNA";
 
-        fetch(url)
+        await fetch(url)
           .then((response) => response.arrayBuffer())
           .then((buffer) => {
             // Convierte el buffer en un libro de Excel
@@ -228,14 +235,18 @@ export default defineComponent({
               header: 1,
             });
 
-            /*
-            const data = this.trafficZone;
-            const csvData = this.convertToCSV(data);
-            const blob = new Blob([csvData], {
-              type: "text/csv;charset=utf-8;",
-            });
-            saveAs(blob, "traficoZona.csv");
-            */
+            const csv = Papa.unparse(this.trafficZone);
+
+            const { data, meta } = Papa.parse(csv, { header: true });
+            //console.log("1 valores meta", meta, data);
+
+            this.trafficZone = data;
+            //const data = this.trafficZone;
+            //const csvData = this.convertToCSV(data);
+            //const blob = new Blob([csvData], {
+            //  type: "text/csv;charset=utf-8;",
+            //});
+            //saveAs(blob, "traficoZona.csv");
           })
           .catch((error) => {
             console.log("Error al leer el archivo de Excel:", error);
@@ -244,7 +255,7 @@ export default defineComponent({
         console.error(error);
       }
 
-      Papa.parse("/datos_dinamico_labels_varibleZona.csv", {
+      await Papa.parse("/datos_dinamico_labels_varibleZona.csv", {
         download: true,
         header: true,
         complete: (results) => {
@@ -258,8 +269,25 @@ export default defineComponent({
       } catch (error) {
         console.error("Error al cargar el modelo:", error);
       }
+
+      //console.log("variable de trafico",this.trafficVariable);
+      const newData = await this.trafficZone.map((item) => {
+        // Buscamos el objeto en meta que tenga el mismo id que el elemento actual de data
+        const matchingMeta =  this.trafficVariable.find(
+          (metaItem) => metaItem.id === item.id
+        );
+
+        // Creamos un nuevo objeto con las propiedades originales de data y la nueva columna
+        return {
+          ...item,
+          Traffic_variable: matchingMeta ? matchingMeta.Traffic_variable : null, // Asignamos el valor de meta o null si no se encuentra el id
+        };
+      });
+
+      console.log(newData);
     },
 
+    ////////////////////////////////////////////////////////////////////////////////////////////
     rowsToOneHot(rows, classMaps) {
       const categoricalColumns = [
         0,
@@ -294,6 +322,7 @@ export default defineComponent({
       );
     },
 
+    //////////////////////////////////////////////////////////////////////////////////////
     async realizarPrediccion() {
       //leer el archivo dataset
       const csvFilePath = "./datos_dinamico_labels_varibleZonaSinVacios.csv";
@@ -376,10 +405,13 @@ export default defineComponent({
 
       //predecir
       console.log("8 verificar en la entrada a predecir", encodedFeatures);
+      
+      //parte magica para que funcione la predicción
       let raw_model = toRaw(this.modelo);
+      let result = await raw_model.predict(encodedFeatures).arraySync();
+      console.log(" 9 resultados de la predicción con raw",result);
 
-      let result = raw_model.predict(encodedFeatures);
-      console.log("no manches paso", result);
+      //parte original
       const predictions = await this.modelo
         .predict(encodedFeatures)
         .arraySync();
@@ -421,6 +453,7 @@ export default defineComponent({
       console.log("RecallCarga:", recall);
       console.log("F1-scoreCarga:", f1Score);
     },
+    //////////////////////////////////////////////////////////////////////////
 
     convertToCSV(data) {
       //const headers = ["id", "predominant_color","exponential_color_weighting","linear_color_weighting","diffuse_logic_traffic"];
@@ -435,6 +468,7 @@ export default defineComponent({
       //return [headers, ...rows].map((row) => row.join(",")).join("\n");
       return [...rows].map((row) => row.join(",")).join("\n");
     },
+    ////////////////////////////////////////////////////////////////////////////////////
   },
 });
 </script>
