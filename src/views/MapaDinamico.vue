@@ -9,14 +9,14 @@
       :center="center"
       :zoom="12"
     >
-      <!-- <Marker v-for="(marke, index) in markers" :options="marke" :key="index" /> -->
+      
       <Circle
         v-for="(circle, index) in circulos"
         :options="circle"
         :key="index"
       />
     </GoogleMap>
-
+    <!--  
     <v-sheet width="250" class="mx-auto" style="padding-left: 15px">
       <v-form ref="form">
         <v-checkbox
@@ -48,7 +48,7 @@
             v-model="tipoVehiculo"
             :items="itemsVehiculo"
             :rules="[(v) => !!v || 'Campo requerido']"
-            label="Typo de vehículo"
+            label="Tipo de vehículo"
             required
             :disabled="!checkbox"
           ></v-select>
@@ -60,11 +60,12 @@
             @click="realizarPrediccion"
             :disabled="!checkbox"
           >
-            Actualiza riesgo
+            Actualizar riesgo
           </v-btn>
         </div>
       </v-form>
     </v-sheet>
+    -->
   </v-layout>
 </template>
 
@@ -107,7 +108,6 @@ export default defineComponent({
       checkbox: false,
       center: { lat: 20.670303919412067, lng: -103.34941565353975 },
       circulos: [],
-      modelo: null,
       trafficVariable: [],
       trafficZone: [],
       dataset: [],
@@ -116,7 +116,7 @@ export default defineComponent({
 
   mounted() {
     this.ActualizaModeloTrafico();
-    this.cargarModeloDinamico();
+    this.cargarDatosDinamico();
   },
 
   methods: {
@@ -182,7 +182,9 @@ export default defineComponent({
       }
     },
 
-    async cargarModeloDinamico() {
+    
+///////////////////////////////////////////////////////////////////////
+    async cargarDatosDinamico() {
       try {
         const url =
           "https://www.googleapis.com/drive/v3/files/1KoS9HTfD-HH4hoLYuKZr1TlEU9VcuWRaI13lugV-pw8/export?mimeType=application/vnd.openxmlformats-officedocument.spreadsheetml.sheet&key=AIzaSyBgKFy9Wna7cgZbeUnWOfmKa-wnLyNakNA";
@@ -263,17 +265,11 @@ export default defineComponent({
         },
       });
 
-      try {
-        this.modelo = await tf.loadLayersModel("./modelo/model.json");
-        console.log("modelo cargado");
-      } catch (error) {
-        console.error("Error al cargar el modelo:", error);
-      }
 
       //console.log("variable de trafico",this.trafficVariable);
       const newData = await this.trafficZone.map((item) => {
         // Buscamos el objeto en meta que tenga el mismo id que el elemento actual de data
-        const matchingMeta =  this.trafficVariable.find(
+        const matchingMeta = this.trafficVariable.find(
           (metaItem) => metaItem.id === item.id
         );
 
@@ -284,177 +280,15 @@ export default defineComponent({
         };
       });
 
-      console.log(newData);
+      //console.log(newData);
     },
-
-    ////////////////////////////////////////////////////////////////////////////////////////////
-    rowsToOneHot(rows, classMaps) {
-      const categoricalColumns = [
-        0,
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        ,
-        7,
-        8,
-        9,
-        10,
-        11,
-        12,
-        13,
-        14,
-      ];
-
-      return rows.map((row) =>
-        row
-          .map((value, index) => {
-            if (categoricalColumns.includes(index)) {
-              const classIndex = classMaps[index].indexOf(value);
-              return tf.oneHot(classIndex, classMaps[index].length).arraySync();
-            } else {
-              return parseFloat(value);
-            }
-          })
-          .flat()
-      );
-    },
-
+   
     //////////////////////////////////////////////////////////////////////////////////////
     async realizarPrediccion() {
-      //leer el archivo dataset
-      const csvFilePath = "./datos_dinamico_labels_varibleZonaSinVacios.csv";
-      const response = await fetch(csvFilePath);
-      const csvData = await response.text();
-      const { data, meta } = Papa.parse(csvData, { header: true });
-      console.log("1 valores meta", meta);
-
-      const numericFeatures = data.map((row) =>
-        Object.values(row).slice(0, 3).map(Number)
-      );
-      //console.log(numericFeatures)
-      const categoricalFeatures = data.map((row) =>
-        Object.values(row).slice(3, -1)
-      );
-
-      const categoricalColumns = [
-        0,
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        ,
-        7,
-        8,
-        9,
-        10,
-        11,
-        12,
-        13,
-        14,
-      ];
-
-      // Obtener todas las clases únicas y crear el mapeo
-      const classMaps = {};
-      categoricalColumns.forEach((columnIndex) => {
-        const classes = new Set();
-        categoricalFeatures.forEach((row) => {
-          classes.add(row[columnIndex]);
-        });
-        classMaps[columnIndex] = Array.from(classes);
-      });
-
-      console.log("2 clases de las columnas: ", classMaps);
-      // Convertir todas las filas de características categóricas a one-hot encoding
-      const oneHotData = this.rowsToOneHot(categoricalFeatures, classMaps);
-      console.log("3 tamaño del one hot: ", oneHotData.length);
-      console.log(
-        "4 tamaño de los features numericos: ",
-        numericFeatures.length
-      );
-
-      // Convertir los arreglos en tensores de TensorFlow
-      const numericFeaturesTensor = await tf.tensor2d(numericFeatures);
-      const oneHotDataTensor = await tf.tensor2d(oneHotData);
-      // Crear el tensor final de características one-hot
-      const encodedFeatures = await tf.concat(
-        [numericFeaturesTensor, oneHotDataTensor],
-        1
-      );
-
-      // Imprimir las primeras 5 filas de encodedFeatures
-      await encodedFeatures
-        .slice([0, 0], [5, encodedFeatures.shape[1]])
-        .array()
-        .then((array) => {
-          console.log("5 encodedFeatures:", array);
-        });
-
-      const labels = data.map((row) => Number(row.label));
-
-      // Convertir las etiquetas a tensores de TensorFlow
-      const tensorLabels = await tf.tensor2d(labels, [labels.length, 1]);
-
-      //verifica los tamaños
-      console.log("6 Forma de encodedFeatures:", encodedFeatures.shape);
-      console.log("7 Forma de tensorLabels:", tensorLabels.shape);
-
-      //predecir
-      console.log("8 verificar en la entrada a predecir", encodedFeatures);
       
-      //parte magica para que funcione la predicción
-      let raw_model = toRaw(this.modelo);
-      let result = await raw_model.predict(encodedFeatures).arraySync();
-      console.log(" 9 resultados de la predicción con raw",result);
-
-      //parte original
-      const predictions = await this.modelo
-        .predict(encodedFeatures)
-        .arraySync();
-      console.log("Primeras 100 predicciones:");
-      console.log(predictions.slice(0, 100));
-      // Convertir las etiquetas de las predicciones a valores binarios (0 o 1)
-      const binaryPredictions = predictions.map((value) =>
-        value >= 0.5 ? 1 : 0
-      );
-
-      // Calcular las métricas de evaluación manualmente
-      const truePositives = binaryPredictions.reduce(
-        (acc, prediction, index) => {
-          return prediction === labels[index] ? acc + 1 : acc;
-        },
-        0
-      );
-
-      const falsePositives = binaryPredictions.reduce(
-        (acc, prediction, index) => {
-          return prediction === 1 && labels[index] === 0 ? acc + 1 : acc;
-        },
-        0
-      );
-
-      const falseNegatives = binaryPredictions.reduce(
-        (acc, prediction, index) => {
-          return prediction === 0 && labels[index] === 1 ? acc + 1 : acc;
-        },
-        0
-      );
-
-      const precision = truePositives / (truePositives + falsePositives);
-      const recall = truePositives / (truePositives + falseNegatives);
-      const f1Score = (2 * precision * recall) / (precision + recall);
-
-      // Imprimir las métricas
-      console.log("PrecisionCarga:", precision);
-      console.log("RecallCarga:", recall);
-      console.log("F1-scoreCarga:", f1Score);
     },
-    //////////////////////////////////////////////////////////////////////////
 
+    //////////////////////////////////////////////////////////////////////////
     convertToCSV(data) {
       //const headers = ["id", "predominant_color","exponential_color_weighting","linear_color_weighting","diffuse_logic_traffic"];
       const rows = data.map((item) => [

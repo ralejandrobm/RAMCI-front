@@ -37,7 +37,7 @@ export default defineComponent({
    
     var accidentes = [];
 
-    Papa.parse("/gbInfraestructuraManuel.csv", {
+    Papa.parse("/gbInfraestructuraManuelV1.csv", {
       download: true,
       header: true,
       complete:  (results)  => {
