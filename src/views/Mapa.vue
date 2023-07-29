@@ -37,7 +37,10 @@ export default defineComponent({
    
     var accidentes = [];
 
-    Papa.parse("/gbInfraestructuraManuelV1.csv", {
+    //Papa.parse("/gbInfraestructuraManuelV1.csv", {
+     // Papa.parse("/gbInfraestructuraManuelV2.csv", {
+     // Papa.parse("/ramdom-forest.csv", {
+      Papa.parse("/regresionLogistica.csv", {
       download: true,
       header: true,
       complete:  (results)  => {

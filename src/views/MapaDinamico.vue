@@ -9,14 +9,13 @@
       :center="center"
       :zoom="12"
     >
-      
       <Circle
         v-for="(circle, index) in circulos"
         :options="circle"
         :key="index"
       />
     </GoogleMap>
-    <!--  
+
     <v-sheet width="250" class="mx-auto" style="padding-left: 15px">
       <v-form ref="form">
         <v-checkbox
@@ -29,6 +28,8 @@
           <v-select
             v-model="sexo"
             :items="itemsSexo"
+            item-value="value"
+            item-title="text"
             :rules="[(v) => !!v || 'Campo requerido']"
             label="Sexo"
             required
@@ -38,6 +39,8 @@
           <v-select
             v-model="rangoEdad"
             :items="itemsRangoEdad"
+            item-value="value"
+            item-title="text"
             :rules="[(v) => !!v || 'Campo requerido']"
             label="Rango de edad"
             required
@@ -47,6 +50,8 @@
           <v-select
             v-model="tipoVehiculo"
             :items="itemsVehiculo"
+            item-value="value"
+            item-title="text"
             :rules="[(v) => !!v || 'Campo requerido']"
             label="Tipo de vehículo"
             required
@@ -65,7 +70,6 @@
         </div>
       </v-form>
     </v-sheet>
-    -->
   </v-layout>
 </template>
 
@@ -84,26 +88,29 @@ export default defineComponent({
 
   data() {
     return {
-      sexo: "Hombre",
-      rangoEdad: "0 a 9",
-      tipoVehiculo: "Bicicleta",
-      itemsSexo: ["Hombre", "Mujer"],
+      sexo: "M",
+      rangoEdad: "0-19",
+      tipoVehiculo: "Bicycle",
+      itemsSexo: [
+        { text: "Hombre", value: "M" },
+        { text: "Mujer", value: "F" },
+      ],
       itemsRangoEdad: [
-        "0 a 9",
-        "10 a 19",
-        "20 a 29",
-        "30 a 39",
-        "40 a 49",
-        "50 a 59",
-        "60 a 69",
-        " 70 o más",
+        
+        { text: "0 a 19", value: "0-19" },
+        { text: "20 a 29", value: "20-29" },
+        { text: "30 a 39", value: "30-39" },
+        { text: "40 a 49", value: "40-49" },
+        { text: "50 a 59", value: "50-59" },
+        { text: "60 a 69", value: "60-69" },
+        { text: "70 o más", value: "70+" },
       ],
       itemsVehiculo: [
-        "Bicicleta",
-        "Vehículo pesado",
-        "Vehículo de pasajeros",
-        "Tren",
-        "Vehículo privado",
+        { text: "Bicicleta", value: "Bicycle" },
+        { text: "Vehículo pesado", value: "Truck" },
+        { text: "Vehículo de pasajeros", value: "Passenger_vehicle" },
+        { text: "Tren", value: "Train" },
+        { text: "Vehículo privado", value: "Private_car" },
       ],
       checkbox: false,
       center: { lat: 20.670303919412067, lng: -103.34941565353975 },
@@ -182,8 +189,7 @@ export default defineComponent({
       }
     },
 
-    
-///////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////
     async cargarDatosDinamico() {
       try {
         const url =
@@ -265,7 +271,6 @@ export default defineComponent({
         },
       });
 
-
       //console.log("variable de trafico",this.trafficVariable);
       const newData = await this.trafficZone.map((item) => {
         // Buscamos el objeto en meta que tenga el mismo id que el elemento actual de data
@@ -282,10 +287,67 @@ export default defineComponent({
 
       //console.log(newData);
     },
-   
+
     //////////////////////////////////////////////////////////////////////////////////////
     async realizarPrediccion() {
+      var circulos = [];
+      var myHeaders = new Headers();
+      myHeaders.append("Content-Type", "application/json");
+
+    
+      var raw = JSON.stringify({
+        age: this.rangoEdad,
+        sex: this.sexo,
+        vehicle_type: this.tipoVehiculo,
+      });
       
+
+      console.log(raw);
+
+      var requestOptions = {
+        method: "POST",
+        headers: myHeaders,
+        body: raw,
+        redirect: "follow",
+      };
+
+      fetch(
+        "http://174.129.62.199/api/ai/dynamic/xgboost-predictor",
+        requestOptions
+      )
+        .then((response) => response.json())
+        .then((result) => {
+          result.result.forEach((item) => {
+            var color = "#FF0000";
+            if (item.risk == "Sin riesgo") {
+              color = "#43DA28";
+            } else if (item.risk == "Poco riesgo") {
+              color = "#EEF11D";
+            } else if (item.risk == "Riesgo moderado") {
+              color = "#FAAA26";
+            } else if (item.risk == "Alto riesgo") {
+              color = "#FF0000";
+            }
+
+            const circulo = {
+              center: {
+                lat: parseFloat(item.latitude),
+                lng: parseFloat(item.longitude),
+              },
+              radius: 100,
+              strokeColor: color,
+              strokeOpacity: 0.8,
+              strokeWeight: 2,
+              fillColor: color,
+              fillOpacity: 0.35,
+            };
+
+            circulos.push(circulo);
+          });
+          this.circulos = circulos;
+        })
+
+        .catch((error) => console.log("error", error));
     },
 
     //////////////////////////////////////////////////////////////////////////
