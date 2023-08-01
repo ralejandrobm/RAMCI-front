@@ -77,11 +77,10 @@
 import mapaGoogle from "../components/MapaGoogle.vue";
 import { defineComponent } from "vue";
 import { GoogleMap, Circle, Marker } from "vue3-google-map";
-import { saveAs } from "file-saver";
+
 import * as XLSX from "xlsx";
 import Papa from "papaparse";
-import * as tf from "@tensorflow/tfjs";
-import { toRaw } from "vue";
+
 
 export default defineComponent({
   components: { GoogleMap, Circle, Marker, mapaGoogle },
@@ -90,7 +89,7 @@ export default defineComponent({
     return {
       sexo: "M",
       rangoEdad: "0-19",
-      tipoVehiculo: "Bicycle",
+      tipoVehiculo: "Truck",
       itemsSexo: [
         { text: "Hombre", value: "M" },
         { text: "Mujer", value: "F" },
@@ -106,10 +105,9 @@ export default defineComponent({
         { text: "70 o más", value: "70+" },
       ],
       itemsVehiculo: [
-        { text: "Bicicleta", value: "Bicycle" },
         { text: "Vehículo pesado", value: "Truck" },
         { text: "Vehículo de pasajeros", value: "Passenger_vehicle" },
-        { text: "Tren", value: "Train" },
+        { text: "Bicicleta", value: "Bicycle" },
         { text: "Vehículo privado", value: "Private_car" },
       ],
       checkbox: false,
@@ -126,67 +124,66 @@ export default defineComponent({
     this.cargarDatosDinamico();
   },
 
+  watch: {
+    checkbox(nuevoValor, valorAnterior) {
+      console.log('Nuevo valor:', nuevoValor);
+      console.log('Valor anterior:', valorAnterior);
+      if(nuevoValor==false)
+      {
+        this.ActualizaModeloTrafico();
+      }
+    }
+  },
+
   methods: {
     async ActualizaModeloTrafico() {
-      var circulos = [];
+          var circulos = [];
+      var myHeaders = new Headers();
+      myHeaders.append("Content-Type", "application/json");
 
-      try {
-        const url =
-          "https://www.googleapis.com/drive/v3/files/1njeXoo1FNx0nBxxvnp4FiGawnPZpEtNUUzQDcgXJy9g/export?mimeType=application/vnd.openxmlformats-officedocument.spreadsheetml.sheet&key=AIzaSyBgKFy9Wna7cgZbeUnWOfmKa-wnLyNakNA";
+      var requestOptions = {
+        method: "POST",
+        headers: myHeaders,
+        redirect: "follow",
+      };
 
-        fetch(url)
-          .then((response) => response.arrayBuffer())
-          .then((buffer) => {
-            // Convierte el buffer en un libro de Excel
-            const workbook = XLSX.read(buffer, { type: "buffer" });
-
-            // Obtiene la primera hoja del libro de Excel
-            const sheetName = workbook.SheetNames[0];
-            const worksheet = workbook.Sheets[sheetName];
-
-            // Accede a los datos de la primera hoja
-            const accidentes = XLSX.utils.sheet_to_json(worksheet, {
-              header: 1,
-            });
-
-            //console.log(accidentes);
-            // Aquí puedes realizar operaciones con los datos de la primera hoja
-            for (let h = 0; h < accidentes.length; h++) {
-              var color = "#FF0000";
-              if (accidentes[h][3] == "Sin riesgo") {
-                color = "#43DA28";
-              } else if (accidentes[h][3] == "Poco riesgo") {
-                color = "#EEF11D";
-              } else if (accidentes[h][3] == "Riesgo moderado") {
-                color = "#FAAA26";
-              } else if (accidentes[h][3] == "Alto riesgo") {
-                color = "#FF0000";
-              }
-
-              const circulo = {
-                center: {
-                  lat: parseFloat(accidentes[h][1]),
-                  lng: parseFloat(accidentes[h][2]),
-                },
-                radius: 100,
-                strokeColor: color,
-                strokeOpacity: 0.8,
-                strokeWeight: 2,
-                fillColor: color,
-                fillOpacity: 0.35,
-              };
-
-              circulos.push(circulo);
+      fetch(
+        "https://apiramci.ralejandro.com/api/ai/traffic/logistic-regressions",
+        requestOptions
+      )
+        .then((response) => response.json())
+        .then((result) => {
+          result.result.forEach((item) => {
+            var color = "#FF0000";
+            if (item.risk == "Sin riesgo") {
+              color = "#43DA28";
+            } else if (item.risk == "Poco riesgo") {
+              color = "#EEF11D";
+            } else if (item.risk == "Riesgo moderado") {
+              color = "#FAAA26";
+            } else if (item.risk == "Alto riesgo") {
+              color = "#FF0000";
             }
 
-            this.circulos = circulos;
-          })
-          .catch((error) => {
-            console.log("Error al leer el archivo de Excel:", error);
+            const circulo = {
+              center: {
+                lat: parseFloat(item.latitude),
+                lng: parseFloat(item.longitude),
+              },
+              radius: 100,
+              strokeColor: color,
+              strokeOpacity: 0.8,
+              strokeWeight: 2,
+              fillColor: color,
+              fillOpacity: 0.35,
+            };
+
+            circulos.push(circulo);
           });
-      } catch (error) {
-        console.error(error);
-      }
+          this.circulos = circulos;
+        })
+
+        .catch((error) => console.log("error", error));
     },
 
     ///////////////////////////////////////////////////////////////////////
@@ -312,7 +309,7 @@ export default defineComponent({
       };
 
       fetch(
-        "http://174.129.62.199/api/ai/dynamic/xgboost-predictor",
+        "https://apiramci.ralejandro.com/api/ai/dynamic/logistic-regressions",
         requestOptions
       )
         .then((response) => response.json())

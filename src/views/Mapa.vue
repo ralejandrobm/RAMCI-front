@@ -40,7 +40,8 @@ export default defineComponent({
     //Papa.parse("/gbInfraestructuraManuelV1.csv", {
      // Papa.parse("/gbInfraestructuraManuelV2.csv", {
      // Papa.parse("/ramdom-forest.csv", {
-      Papa.parse("/regresionLogisticaPrediccion.csv", {
+     // Papa.parse("/regresionLogisticaPrediccion.csv", {
+      Papa.parse("/regresionLogisticaPrediccionInter.csv", {
       download: true,
       header: true,
       complete:  (results)  => {
