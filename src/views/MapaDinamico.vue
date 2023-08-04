@@ -15,6 +15,12 @@
         :key="index"
       />
     </GoogleMap>
+    <v-navigation-drawer
+        expand-on-hover
+        location="right"
+        permanent
+        
+      >
 
     <v-sheet width="250" class="mx-auto" style="padding-left: 15px">
       <v-form ref="form">
@@ -70,6 +76,7 @@
         </div>
       </v-form>
     </v-sheet>
+     </v-navigation-drawer>
   </v-layout>
 </template>
 

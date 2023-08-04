@@ -7,7 +7,7 @@
       >
         <v-list>
           <v-list-item
-            prepend-avatar="/logo.png"
+            prepend-avatar="/logob.png"
             title="RAMCI"
            
           ></v-list-item>
