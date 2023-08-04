@@ -7,7 +7,7 @@
       >
         <v-list>
           <v-list-item
-            prepend-avatar="https://static.vecteezy.com/system/resources/previews/004/422/671/original/car-collision-with-cyclist-gradient-icon-for-dark-theme-accident-with-bicyclist-car-on-bike-collision-thin-line-color-symbol-modern-style-pictogram-isolated-outline-drawing-vector.jpg"
+            prepend-avatar="/logo.png"
             title="RAMCI"
            
           ></v-list-item>

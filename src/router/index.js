@@ -25,6 +25,11 @@ const routes = [
   
   },
   {
+    path: '/metodo',
+    component: () => import(/* webpackChunkName: "home" */ '@/views/Metodo.vue'),
+  
+  },
+  {
     path: '/dinamico',
     component: () => import(/* webpackChunkName: "home" */ '@/views/MapaDinamico.vue'),
   
