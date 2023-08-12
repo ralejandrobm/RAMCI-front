@@ -26,7 +26,7 @@
         </v-list>
       </v-navigation-drawer>
       <v-app-bar :elevation="1" >
-        <v-app-bar-title class="text-center">Riesgo de Accidente de Movilidad Ciclista</v-app-bar-title>
+        <v-app-bar-title class="text-center">Predicción de severidad</v-app-bar-title>
       </v-app-bar>
       <v-main style="height: 100vh;">
         <router-view />
