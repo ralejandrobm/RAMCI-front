@@ -18,7 +18,7 @@
         
           <v-list-item prepend-icon="mdi-map" title="RAMCI Infraestructura" value="mapa" @click="navigateTo('/mapa')"></v-list-item>
          
-           <v-list-item prepend-icon="mdi-map" title="RAMCI En tiempo real" value="dinamico" @click="navigateTo('/dinamico')"></v-list-item>
+           <v-list-item prepend-icon="mdi-map" title="RAMCI Dinámico" value="dinamico" @click="navigateTo('/dinamico')"></v-list-item>
 
        <!--   <v-list-item prepend-icon="mdi-calculator" title="calcular riesgo" value="riesgo" @click="navigateTo('/riesgo')"></v-list-item> !-->
          
