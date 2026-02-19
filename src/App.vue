@@ -22,7 +22,7 @@
 
        <!--   <v-list-item prepend-icon="mdi-calculator" title="calcular riesgo" value="riesgo" @click="navigateTo('/riesgo')"></v-list-item> !-->
          
-          <v-list-item prepend-icon="mdi-file-document" title="Metodología" value="metodo" @click="navigateTo('/metodo')"></v-list-item>
+        <!--   <v-list-item prepend-icon="mdi-file-document" title="Metodología" value="metodo" @click="navigateTo('/metodo')"></v-list-item> !-->
         </v-list>
       </v-navigation-drawer>
       <v-app-bar :elevation="1" >
