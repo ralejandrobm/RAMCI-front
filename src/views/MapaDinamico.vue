@@ -80,7 +80,7 @@
      </v-navigation-drawer>
      <v-main class="fill-height">
     <GoogleMap
-      api-key="AIzaSyBgKFy9Wna7cgZbeUnWOfmKa-wnLyNakNA"
+      api-key="YourGoogleAPIKey"
       style="width: 100%; height: 100%"
       :center="center"
       :zoom="12"
